@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מחשבון מימון רכב מתקדם</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#0b1220;--bg2:#1a2540;--card:#1c2740;--card2:#243253;--line:rgba(255,255,255,.09);--tx:#f4f6fb;--tx2:#9aa8c4;--gold:#fbbf24;--gold2:#d97706;--ok:#34d399;--bad:#fb7185;--inp:#101a30;--sh:0 1px 0 rgba(255,255,255,.12) inset,0 -3px 0 rgba(0,0,0,.35) inset,0 2px 2px rgba(0,0,0,.3),0 12px 24px -6px rgba(0,0,0,.5),0 32px 60px -20px rgba(0,0,0,.55)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg1:#e6ebf5;--bg2:#f8fafd;--card:#fff;--card2:#eef2fa;--line:rgba(15,23,42,.1);--tx:#0f172a;--tx2:#5b6b88;--inp:#e9eef8;--sh:0 1px 0 #fff inset,0 -3px 0 rgba(15,23,42,.08) inset,0 2px 2px rgba(15,23,42,.08),0 12px 24px -6px rgba(15,23,42,.15),0 32px 60px -20px rgba(15,23,42,.2)}}
+:root[data-theme="light"]{--bg1:#e6ebf5;--bg2:#f8fafd;--card:#fff;--card2:#eef2fa;--line:rgba(15,23,42,.1);--tx:#0f172a;--tx2:#5b6b88;--inp:#e9eef8;--sh:0 1px 0 #fff inset,0 -3px 0 rgba(15,23,42,.08) inset,0 2px 2px rgba(15,23,42,.08),0 12px 24px -6px rgba(15,23,42,.15),0 32px 60px -20px rgba(15,23,42,.2)}
+*{box-sizing:border-box;margin:0}
+html{height:100%}
+body{font-family:'Heebo',system-ui,sans-serif;color:var(--tx);background:radial-gradient(circle at 80% 0,var(--bg2),var(--bg1) 60%) fixed;min-height:100%;padding:calc(16px + env(safe-area-inset-top,0px)) 14px calc(24px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:1040px;margin:auto;perspective:1400px}
+.card{background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--sh);transform-style:preserve-3d;transition:transform .25s ease;will-change:transform}
+h1{font-size:1.6rem;font-weight:900}h2{font-size:1rem;font-weight:800;color:var(--gold);margin-bottom:14px}
+.head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.logo{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-size:28px;background:linear-gradient(145deg,var(--gold),var(--gold2));box-shadow:0 4px 0 #92400e,0 10px 20px rgba(217,119,6,.45),0 1px 0 rgba(255,255,255,.5) inset;transform:rotate(-4deg) translateZ(30px)}
+.sub{font-size:.8rem;color:var(--tx2)}
+.grid{display:grid;gap:18px;grid-template-columns:1fr}
+@media(min-width:900px){.grid{grid-template-columns:7fr 5fr}}
+.stack{display:grid;gap:18px;align-content:start}
+.row2{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+@media(max-width:520px){.row2{grid-template-columns:1fr}}
+label{display:block;font-size:.75rem;font-weight:700;color:var(--tx2);margin:12px 0 6px}
+.f{display:flex;justify-content:space-between;align-items:center}
+input,select{width:100%;font:inherit;font-weight:700;color:var(--tx);background:var(--inp);border:1px solid var(--line);border-radius:14px;padding:11px 14px;box-shadow:0 3px 6px rgba(0,0,0,.28) inset,0 1px 0 rgba(255,255,255,.06);transition:.2s}
+input:focus,select:focus{outline:none;border-color:var(--gold);box-shadow:0 3px 6px rgba(0,0,0,.2) inset,0 0 0 3px rgba(251,191,36,.28)}
+input.bad{border-color:var(--bad)}
+.num{direction:rtl;text-align:right;font-size:1.1rem}
+.cur{position:relative}.cur input{padding:11px 16px}
+.ov{position:absolute;inset:0;display:flex;align-items:center;padding-inline:16px;pointer-events:none;direction:rtl}
+.mir{font-size:1.1rem;font-weight:700;visibility:hidden;white-space:pre}
+.ov b{color:var(--gold);margin-inline-start:6px}
+#kb{position:fixed;left:0;right:0;bottom:0;display:none;height:46px;padding:0 14px;align-items:center;justify-content:center;background:#d1d4db;z-index:50}
+@media (prefers-color-scheme:dark){#kb{background:#2b2d36}}
+#kb,#kb.show{display:none!important}#kb button{width:auto;background:linear-gradient(180deg,#fde68a,#fbbf24 45%,#d97706);color:#1c1202;font-weight:800;font-size:1rem;padding:6px 30px;border-radius:12px;box-shadow:0 3px 0 #92400e,0 1px 0 rgba(255,255,255,.6) inset}#kb button:active{transform:translateY(3px);box-shadow:0 0 0 #92400e}
+.nt{background:rgba(251,191,36,.12);color:var(--gold);border:1px solid rgba(251,191,36,.35)}
+.ok{display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);z-index:30;padding:8px 22px;font-size:.9rem}
+.ok:active{transform:translateX(-50%) translateY(4px)}
+.ok{display:none!important}
+input[type=range]{padding:0;height:8px;border-radius:6px;background:var(--inp);-webkit-appearance:none;appearance:none;margin-top:10px;box-shadow:0 2px 4px rgba(0,0,0,.35) inset}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fde68a,var(--gold2));box-shadow:0 3px 0 #92400e,0 6px 10px rgba(0,0,0,.4)}
+input[type=range]::-moz-range-thumb{width:26px;height:26px;border:0;border-radius:50%;background:var(--gold2);box-shadow:0 3px 0 #92400e}
+.info{display:flex;justify-content:space-between;gap:8px;padding:11px 14px;border-radius:14px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);margin-top:12px;font-size:.8rem}
+.info b{color:var(--gold)}
+.lim{font-size:.78rem;color:var(--tx2);line-height:1.6;margin-top:10px}
+#status{padding:14px;border-radius:16px;font-weight:700;font-size:.88rem;text-align:center;box-shadow:var(--sh)}
+.ok{background:rgba(52,211,153,.15);color:var(--ok);border:1px solid rgba(52,211,153,.35)}
+.no{background:rgba(251,113,133,.15);color:var(--bad);border:1px solid rgba(251,113,133,.35)}
+.big{text-align:center;padding:20px 10px;border-radius:20px;background:linear-gradient(160deg,rgba(251,191,36,.22),rgba(217,119,6,.06));border:1px solid rgba(251,191,36,.35);box-shadow:0 2px 8px rgba(0,0,0,.3) inset;margin-bottom:14px}
+.big small{display:block;font-size:.72rem;font-weight:700;color:var(--tx2);letter-spacing:.06em}
+#pay{font-size:2.6rem;font-weight:900;color:var(--gold);direction:ltr;display:block;text-shadow:0 1px 0 #d97706,0 2px 0 #b45309,0 3px 0 #92400e,0 8px 14px rgba(0,0,0,.45)}
+.kv{display:flex;justify-content:flex-start;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:.82rem;color:var(--tx2)}
+.kv b{color:var(--tx);direction:ltr}.kv:last-child{border:0}
+.kv.tot b{color:var(--gold);font-size:1rem}
+.kv.fee{align-items:center;font-size:.86rem;padding:14px 12px;border-radius:16px;background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.4);box-shadow:0 2px 6px rgba(0,0,0,.18) inset}
+.kv.fee span{color:var(--tx);font-weight:800}
+.kv.fee b{font-size:1.25rem;font-weight:900;color:var(--gold);white-space:nowrap;flex:none}
+.card,label,h2,.lim{text-align:center}
+.num,select{text-align:center;text-align-last:center}
+.cur input{padding:11px 16px 11px 38px}.cur.ns input{padding:11px 16px}
+.ov{justify-content:center}
+.f,.info,.kv,.btns{justify-content:center;gap:12px}
+.notes{padding:0;list-style-position:inside}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.cmp div{padding:12px;border-radius:14px;background:var(--inp);text-align:center;font-size:.75rem;color:var(--tx2);box-shadow:0 2px 5px rgba(0,0,0,.25) inset}
+.cmp b{display:block;color:var(--tx);font-size:1.05rem;direction:ltr;margin-top:3px}.cmp .best b{color:var(--ok)}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+button{font:inherit;font-weight:800;cursor:pointer;border:0;border-radius:14px;padding:12px 18px;color:#1c1202;background:linear-gradient(180deg,#fde68a,var(--gold) 45%,var(--gold2));box-shadow:0 5px 0 #92400e,0 10px 18px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.6) inset;transition:transform .1s,box-shadow .1s;transform:translateZ(0)}
+button:active{transform:translateY(4px);box-shadow:0 1px 0 #92400e,0 3px 6px rgba(0,0,0,.35)}
+button.sec{color:var(--tx);background:linear-gradient(180deg,var(--card2),var(--card));box-shadow:0 5px 0 rgba(0,0,0,.4),0 10px 18px rgba(0,0,0,.25),0 1px 0 rgba(255,255,255,.12) inset}
+#theme{position:absolute;inset-inline-start:0;top:0;padding:8px 12px}
+.tw{overflow-x:auto;max-height:440px;overflow-y:auto;border-radius:14px;border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:.8rem;direction:rtl;min-width:520px}
+th{position:sticky;top:0;background:var(--card2);color:var(--gold);font-weight:800;padding:10px;text-align:center}
+td{padding:8px 10px;text-align:center;border-top:1px solid var(--line);direction:ltr}
+tbody tr:nth-child(even){background:rgba(127,127,127,.06)}
+tr.last td{font-weight:800;color:var(--gold)}
+.notes{font-size:.75rem;color:var(--tx2);line-height:1.8;padding-inline-start:18px}
+.head{position:relative}
+#pdfHead{display:none}
+@media print{
+ :root{--bg1:#fff;--bg2:#fff;--card:#fff;--card2:#fff;--tx:#111;--tx2:#444;--inp:#f3f3f3;--gold:#92400e;--line:#ccc;--sh:none}
+ body{background:#fff!important;padding:0}.card{box-shadow:none;transform:none!important;break-inside:avoid;border:1px solid #ccc}
+ .btns,#theme,input[type=range],#limCard,#status{display:none!important}
+ .grid{grid-template-columns:1fr 1fr}.tw{max-height:none;overflow:visible}th{position:static}
+ #pay{text-shadow:none}#pdfHead{display:block;font-size:.8rem;color:#444;margin-bottom:8px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+ 
+ <div id="pdfHead"></div>
+ <div class="grid" style="margin-top:18px">
+  <div class="stack">
+   <div class="card" id="limCard">
+    <h2>⚙️ הגדרות רכב ומסלול</h2>
+    <div class="row2">
+     <div><label for="type">סוג הרכב</label><select id="type"><option selected>0 ק״מ</option><option>יד 2</option></select></div>
+     <div id="yearBox"><label for="year">שנתון (יד 2)</label><select id="year"></select></div>
+    </div>
+    <label for="track">מסלול ריבית</label>
+    <select id="track"><option>פריים</option><option>מדד</option></select>
+    <div class="info"><span>תיאור הריבית</span><b id="rdesc"></b></div>
+    <div class="lim" id="lim"></div>
+   </div>
+   <div class="card">
+    <h2>📋 פרטי העסקה</h2>
+    <label for="price">מחיר מחירון בסיס (לאחר הפחתות)</label>
+    <div class="cur"><input id="price" class="num" inputmode="numeric" value=""><div class="ov"><span class="mir"></span><b>₪</b></div></div>
+    <label for="loan">סכום ההלוואה</label>
+    <div class="cur"><input id="loan" class="num" inputmode="numeric" value=""><div class="ov"><span class="mir"></span><b>₪</b></div></div>
+    <div class="lim" id="ltv"></div>
+    <div class="f"><label for="months">תקופת ההלוואה (חודשים)</label><label id="mv" style="color:var(--gold)"></label></div>
+    <div class="cur ns"><input id="months" class="num" inputmode="numeric" value="60"></div>
+    <input type="range" id="slider" min="12" max="99" value="60" aria-label="חודשים">
+    <label for="bal">סכום הבלון בסוף התקופה</label>
+    <div class="cur"><input id="bal" class="num" inputmode="numeric" value=""><div class="ov"><span class="mir"></span><b>₪</b></div></div>
+    <div class="lim" id="balmax"></div>
+   </div>
+  </div>
+  <div class="stack">
+   <div id="status"></div>
+   <div class="card">
+    <h2>💎 תוצאות החישוב</h2>
+    <div class="big"><small>החזר חודשי משוער</small><span id="pay">₪ 0</span></div>
+    <div class="kv fee"><span>עמלת הקמה, שעבוד ומשכון (כולל מע״מ)</span><b id="fee"></b></div>
+    <div class="cmp"><div id="cP">פריים<b></b></div><div id="cI">מדד<b></b></div></div>
+    <div class="lim" style="margin-top:8px">השוואת החזר חודשי בין המסלולים עבור אותם נתונים.</div>
+   </div>
+   <div class="card btns">
+    <button id="pdf">📄 ייצוא ל-PDF</button>
+    <button id="tg" class="sec">📊 טבלת סילוקין</button>
+   </div>
+   
+  </div>
+ </div>
+ <div class="card" id="schedCard" style="margin-top:18px">
+  <h2>📊 טבלת סילוקין</h2>
+  <div class="tw"><table><thead><tr><th>#</th><th>החזר חודשי</th><th>קרן</th><th>ריבית</th><th>יתרה</th></tr></thead><tbody id="tb"></tbody></table></div>
+ </div>
+ <div class="card" style="margin-top:18px">
+  <h2>📌 הערות חשובות</h2>
+  <ul class="notes"><li>ההצעה כפופה לאישור סופי של הגוף המממן.</li><li>הסימולציה להמחשה בלבד; הנתונים עשויים להשתנות לפי נתוני הלקוח והגוף המממן.</li><li>במסלול מדד לא נכלל חישוב הצמדה למדד המחירים לצרכן.</li><li>לוח סילוקין להמחשה בלבד.</li><li>כל הזכויות שמורות לקרדיבל פלוס בע״מ.</li></ul>
+ </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<div id="kb"><button type="button" id="kbok">✓ אישור</button></div>
+<script>
+const L={2016:{t:[[24,0]],x:'ללא בלון, עד 24 תשלומים'},2017:{t:[[36,0]],x:'ללא בלון, עד 36 תשלומים'},2018:{t:[[36,.35],[48,.30]],x:'48 תשלומים/30% בלון, 36 תשלומים/35% בלון, עד 48 תשלומים'},2019:{t:[[36,.35],[48,.30],[60,0]],x:'48 תשלומים/30% בלון, 36 תשלומים/35% בלון, עד 60 תשלומים'},2020:{t:[[36,.50],[48,.40],[72,0]],x:'48 תשלומים/40% בלון, 36 תשלומים/50% בלון, עד 72 תשלומים'},2021:{t:[[48,.40],[60,.35],[84,0]],x:'60 תשלומים/35% בלון, 48 תשלומים/40% בלון, עד 84 תשלומים'},2022:{t:[[48,.50],[60,.40],[84,0]],x:'60 תשלומים/40% בלון, 48 תשלומים/50% בלון, עד 84 תשלומים'},2023:{t:[[60,.50],[99,0]],x:'60 תשלומים/50% בלון, עד 99 תשלומים'}};
+L[2024]=L[2025]=L[2026]=L[2023];
+const $=i=>document.getElementById(i);
+const yr=$('year');Object.keys(L).forEach(y=>{const o=document.createElement('option');o.value=o.textContent=y;if(y==='2019')o.selected=true;yr.appendChild(o)});
+const pn=v=>{const n=parseFloat(String(v).replace(/[^\d.]/g,''));return isNaN(n)?0:n};
+const fn=n=>n.toLocaleString('he-IL');
+const cur=(n,d=0)=>'₪ '+(isFinite(n)?n:0).toLocaleString('he-IL',{minimumFractionDigits:d,maximumFractionDigits:d});
+function rate(t,k){if(t==='רכב חדש')return k==='פריים'?['פריים (4.75%) + 1.1%',.0585]:['4.4%',.044];if(t==='0 ק״מ')return k==='פריים'?['פריים (4.75%) + 2.2%',.0695]:['5.3%',.053];return k==='פריים'?['פריים (4.75%) + 4%',.0875]:['6.9%',.069]}
+const maxM=y=>Math.max(...L[y].t.map(a=>a[0]));
+const maxP=(y,m)=>{let b=0;L[y].t.forEach(([tm,tp])=>{if(tm>=m)b=Math.max(b,tp)});return b};
+function pmt(loan,bal,m,r){const mr=r/12,p=loan-bal;if(!m)return 0;return(mr?mr*p/(1-Math.pow(1+mr,-m)):p/m)+bal*mr}
+function calc(){
+ const type=$('type').value,used=type==='יד 2';
+ $('yearBox').style.display=used?'':'none';
+ const [rd,r]=rate(type,$('track').value);$('rdesc').textContent=rd;
+ const y=+yr.value;let mx,lt;
+ if(used){mx=maxM(y);lt=L[y].x}else{mx=99;lt='אין הגבלת שנתון ל-0 ק״מ (עד 99 תשלומים | בלון עד 50% בלבד עד 60 תשלומים)'}
+ $('lim').innerHTML='<b style="color:var(--gold)">⚠️ מגבלות:</b> '+lt;
+ $('slider').max=mx;
+ let m=Math.round(pn($('months').value));
+ const price=pn($('price').value),loan=pn($('loan').value),bal=pn($('bal').value);
+ $('mv').textContent=m+' חודשים';$('slider').value=Math.min(m,mx);
+ const pct=m>60?0:(used?maxP(y,m):.5);
+ $('balmax').textContent=pct?`בלון מקסימלי ל-${m} תשלומים: ${(pct*100).toFixed(0)}% (${cur(price*pct)})`:`בתקופה זו לא ניתן בלון`;
+ $('ltv').textContent=price?`מימון: ${(loan/price*100).toFixed(1)}% ממחיר הבסיס`:'';
+ const errs=[];
+ if(m<1)errs.push('יש להזין תקופה של חודש לפחות');
+ if(m>mx)errs.push(`תקופת ההלוואה חורגת מהמותר: עד ${mx} תשלומים`);
+ if(loan<=0)errs.push('יש להזין סכום הלוואה');
+ if(price<=0)errs.push('יש להזין מחיר רכב');
+ if(price>0&&loan>price)errs.push('סכום ההלוואה גבוה ממחיר הרכב');
+ if(bal>=loan&&loan>0)errs.push('הבלון חייב להיות נמוך מסכום ההלוואה');
+ if(price>0&&bal>price*pct+.005)errs.push(pct?`הבלון חורג: ל-${m} תשלומים מותר עד ${(pct*100).toFixed(0)}% (${cur(price*pct)})`:`בתקופה של ${m} תשלומים לא ניתן לקבל בלון`);
+ const bad=errs.length>0,blank=!price&&!loan&&!bal;
+ $('status').className=blank?'nt':bad?'no':'ok';
+ $('status').textContent=blank?'ℹ️ הזינו מחיר רכב וסכום הלוואה לחישוב':bad?'⛔ '+errs[0]:'✅ התקופה והבלון עומדים בתנאי המגבלות';
+ $('loan').classList.toggle('bad',(loan>price&&price>0)||(loan<=0&&!blank));
+ $('bal').classList.toggle('bad',bal>price*pct+.005||(bal>=loan&&loan>0));
+ $('months').classList.toggle('bad',m>mx||m<1);
+ const P=pmt(loan,bal,m,r),fee=loan>0?(loan*.015+380)*1.18:0,reg=P*m,intr=reg+bal-loan;
+ $('pay').textContent=cur(P);$('fee').textContent=cur(fee);
+ const a=pmt(loan,bal,m,rate(type,'פריים')[1]),b=pmt(loan,bal,m,rate(type,'מדד')[1]);
+ $('cP').querySelector('b').textContent=cur(a);$('cI').querySelector('b').textContent=cur(b);
+ $('cP').className=a<=b?'best':'';$('cI').className=b<a?'best':'';
+ // schedule
+ const mr=r/12;let bl=loan,h='';
+ for(let i=1;i<=m&&i<=120;i++){const it=bl*mr,pr=P-it;bl-=pr;h+=`<tr><td>${i}</td><td>${cur(P)}</td><td>${cur(pr)}</td><td>${cur(it)}</td><td>${cur(Math.max(bl,0))}</td></tr>`}
+ if(bal>0&&m>0)h+=`<tr class="last"><td>בלון</td><td>${cur(bal)}</td><td>${cur(bal)}</td><td>₪ 0</td><td>₪ 0</td></tr>`;
+ $('tb').innerHTML=bad?'<tr><td colspan="5">תקנו את הנתונים להצגת הטבלה</td></tr>':h;
+}
+['price','loan','bal'].forEach(i=>$(i).addEventListener('input',e=>{const v=pn(e.target.value);e.target.value=e.target.value.trim()===''?'':fn(v);calc()}));
+$('months').addEventListener('input',calc);
+$('slider').addEventListener('input',e=>{$('months').value=e.target.value;calc()});
+['type','year','track'].forEach(i=>$(i).addEventListener('change',calc));
+$('tg').addEventListener('click',()=>$('schedCard').scrollIntoView({behavior:'smooth'}));
+$('pdf').addEventListener('click',()=>{$('pdfHead').textContent=`מחשבון מימון רכב מתקדם | ${$('type').value}${$('type').value==='יד 2'?' '+yr.value:''} | מסלול ${$('track').value} | הופק ב-${new Date().toLocaleDateString('he-IL')}`;makePdf()});
+
+// 3D tilt on pointer devices
+if(matchMedia('(hover:hover)').matches)document.querySelectorAll('.card').forEach(c=>{
+ c.addEventListener('mousemove',e=>{const b=c.getBoundingClientRect(),x=(e.clientX-b.left)/b.width-.5,y=(e.clientY-b.top)/b.height-.5;c.style.transform=`rotateY(${x*5}deg) rotateX(${-y*5}deg) translateZ(6px)`});
+ c.addEventListener('mouseleave',()=>c.style.transform='');
+});
+const kb=$('kb'),vv=window.visualViewport;
+let visBottom=null,visH=0;const embedded=window.self!==window.top;
+const sent=document.createElement('div');sent.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;pointer-events:none;visibility:hidden';document.body.appendChild(sent);
+if('IntersectionObserver' in window)new IntersectionObserver(es=>{const e=es[es.length-1];visBottom=e.isIntersecting?e.intersectionRect.bottom:null;visH=e.isIntersecting?e.intersectionRect.height:0;if(kb.classList.contains('show'))posKb()},{threshold:Array.from({length:1001},(_,i)=>i/1000)}).observe(sent);
+function kbEst(){const sh=Math.max(screen.height,screen.width);return Math.round(sh*(sh>=800?.354:.39))}
+function posKb(){if(embedded&&visBottom!=null){const clipped=visH<screen.height*.75;const bot=clipped?visBottom-36:visBottom-kbEst();kb.style.bottom='auto';kb.style.top=(bot-46+2)+'px';return}const d=vv?window.innerHeight-(vv.height+vv.offsetTop):0;kb.style.top='auto';kb.style.bottom=((d>120?d:kbEst())-2)+'px'}
+const isF=n=>n&&n.matches&&n.matches('.cur input');
+document.querySelectorAll('.cur').forEach(c=>{const b=document.createElement('button');b.type='button';b.className='ok';b.textContent='✓ אישור';b.addEventListener('pointerdown',e=>e.preventDefault());b.addEventListener('click',()=>document.activeElement&&document.activeElement.blur());c.appendChild(b)});
+document.addEventListener('focusin',e=>{if(isF(e.target)&&matchMedia('(pointer:coarse)').matches){kb.classList.add('show');posKb();[350,700].forEach(t=>setTimeout(posKb,t));setTimeout(()=>{try{e.target.scrollIntoView({block:'center',behavior:'smooth'})}catch(_){}},400)}});
+document.addEventListener('focusout',()=>setTimeout(()=>{const a=document.activeElement;document.querySelectorAll('.cur.fk').forEach(c=>{if(!a||a.parentNode!==c)c.classList.remove('fk')});if(!isF(a))kb.classList.remove('show')},60));
+if(vv)['resize','scroll'].forEach(ev=>vv.addEventListener(ev,posKb));
+$('kbok').addEventListener('pointerdown',e=>e.preventDefault());
+$('kbok').addEventListener('click',()=>document.activeElement&&document.activeElement.blur());
+const mir=()=>document.querySelectorAll('.cur').forEach(c=>{const m=c.querySelector('.mir');if(m)m.textContent=c.querySelector('input').value});
+document.addEventListener('input',mir);mir();
+async function makePdf(){
+ const btn=$('pdf'),old=btn.textContent;
+ if($('status').className!=='ok'){btn.textContent='⛔ תקנו את הנתונים';setTimeout(()=>btn.textContent=old,2000);return}
+ if(typeof html2canvas==='undefined'||!window.jspdf){window.print();return}
+ btn.disabled=true;btn.textContent='⏳ מכין PDF…';
+ let rep;
+ try{
+  const used=$('type').value==='יד 2';
+  const rows=[['סוג הרכב',$('type').value+(used?' '+yr.value:'')],['מסלול ריבית',$('track').value+' ('+$('rdesc').textContent+')'],['מחיר מחירון בסיס',$('price').value+' ₪'],['סכום ההלוואה',$('loan').value+' ₪'],['תקופה',$('months').value+' חודשים'],['בלון',($('bal').value||'0')+' ₪'],['החזר חודשי משוער',$('pay').textContent],['עמלת הקמה, שעבוד ומשכון',$('fee').textContent]];
+  rep=document.createElement('div');
+  rep.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff;color:#111;font-family:Heebo,Arial,sans-serif;direction:rtl;padding:32px;box-sizing:border-box';
+  rep.innerHTML=`<style>.r table{width:100%;min-width:0;border-collapse:collapse;direction:rtl;font-size:13px}.r td,.r th{border:1px solid #ddd;padding:6px 8px;text-align:center;color:#111}.r th{position:static;background:#f1f1f1;color:#111}.r tr.last td{color:#92400e}.r tbody tr:nth-child(even){background:#fafafa}.s td:first-child{background:#f7f7f7;font-weight:700;text-align:right;width:40%}.s td:last-child{text-align:right;direction:rtl}</style><div class="r"><h1 style="font-size:26px;margin:0 0 4px;color:#111">מחשבון מימון רכב מתקדם</h1><div style="font-size:12px;color:#555;margin-bottom:14px">הופק ב-${new Date().toLocaleDateString('he-IL')}</div><table class="s"><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table><h2 style="font-size:17px;margin:20px 0 8px;color:#111">לוח סילוקין</h2><table><thead><tr><th>#</th><th>החזר חודשי</th><th>קרן</th><th>ריבית</th><th>יתרה</th></tr></thead><tbody>${$('tb').innerHTML}</tbody></table><h2 style="font-size:15px;margin:20px 0 6px;color:#111">הערות חשובות</h2><ul style="font-size:12px;color:#444;line-height:1.8;padding:0 18px 0 0;margin:0">${document.querySelector('.notes').innerHTML}</ul></div>`;
+  document.body.appendChild(rep);
+  if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+  const canvas=await html2canvas(rep,{scale:2,backgroundColor:'#ffffff',useCORS:true});
+  const pdf=new window.jspdf.jsPDF({unit:'pt',format:'a4'});
+  const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+  const pageH=Math.floor(canvas.width*ph/pw);
+  for(let y=0,first=true;y<canvas.height;y+=pageH){
+   const h=Math.min(pageH,canvas.height-y),c=document.createElement('canvas');
+   c.width=canvas.width;c.height=h;
+   const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,h);x.drawImage(canvas,0,y,canvas.width,h,0,0,canvas.width,h);
+   if(!first)pdf.addPage();first=false;
+   pdf.addImage(c.toDataURL('image/jpeg',.92),'JPEG',0,0,pw,h*pw/canvas.width);
+  }
+  const name='car-finance-'+new Date().toISOString().slice(0,10)+'.pdf',blob=pdf.output('blob');
+  let d=null;try{d=window.claude&&await window.claude.use('downloads')}catch(e){}
+  if(d){try{await d.save({filename:name,data:blob})}catch(e){if(!e||e.code!=='declined')pdf.save(name)}}else pdf.save(name);
+ }catch(e){console.error(e);window.print()}
+ finally{if(rep&&rep.parentNode)rep.parentNode.removeChild(rep);btn.disabled=false;btn.textContent=old}
+}
+['price','loan','bal','months'].forEach(i=>{const e=$(i);e.setAttribute('enterkeyhint','done');e.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();e.blur()}})});
+calc();
+</script>
+</body>
+</html>
