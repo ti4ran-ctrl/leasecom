@@ -28,6 +28,7 @@ label{display:block;font-size:.75rem;font-weight:700;color:var(--tx2);margin:12p
 input,select{width:100%;font:inherit;font-weight:700;color:var(--tx);background:var(--inp);border:1px solid var(--line);border-radius:14px;padding:11px 14px;box-shadow:0 3px 6px rgba(0,0,0,.28) inset,0 1px 0 rgba(255,255,255,.06);transition:.2s}
 input:focus,select:focus{outline:none;border-color:var(--gold);box-shadow:0 3px 6px rgba(0,0,0,.2) inset,0 0 0 3px rgba(251,191,36,.28)}
 input.bad{border-color:var(--bad)}
+input:disabled{opacity:.6;cursor:not-allowed}input:disabled::placeholder{color:var(--bad);opacity:1;font-weight:800}
 .num{direction:rtl;text-align:right;font-size:1.1rem}
 .cur{position:relative}.cur input{padding:11px 16px}
 .ov{position:absolute;inset:0;display:flex;align-items:center;padding-inline:16px;pointer-events:none;direction:rtl}
@@ -65,8 +66,8 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:0;border-radiu
 .f,.info,.kv,.btns{justify-content:center;gap:12px}
 .notes{padding:0;list-style-position:inside}
 .cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.cmp div{padding:12px;border-radius:14px;background:var(--inp);text-align:center;font-size:.75rem;color:var(--tx2);box-shadow:0 2px 5px rgba(0,0,0,.25) inset}
-.cmp b{display:block;color:var(--tx);font-size:1.05rem;direction:ltr;margin-top:3px}.cmp .best b{color:var(--ok)}
+.cmp div{padding:16px 8px;border-radius:14px;background:var(--inp);text-align:center;font-size:.85rem;font-weight:700;color:var(--gold);white-space:nowrap;box-shadow:0 2px 5px rgba(0,0,0,.25) inset}
+.cmp b{display:block;color:var(--gold);font-size:clamp(1.05rem,4.6vw,1.4rem);direction:ltr;margin-top:4px;white-space:nowrap}
 .btns{display:flex;gap:10px;flex-wrap:wrap}
 button{font:inherit;font-weight:800;cursor:pointer;border:0;border-radius:14px;padding:12px 18px;color:#1c1202;background:linear-gradient(180deg,#fde68a,var(--gold) 45%,var(--gold2));box-shadow:0 5px 0 #92400e,0 10px 18px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.6) inset;transition:transform .1s,box-shadow .1s;transform:translateZ(0)}
 button:active{transform:translateY(4px);box-shadow:0 1px 0 #92400e,0 3px 6px rgba(0,0,0,.35)}
@@ -158,7 +159,7 @@ const yr=$('year');Object.keys(L).forEach(y=>{const o=document.createElement('op
 const pn=v=>{const n=parseFloat(String(v).replace(/[^\d.]/g,''));return isNaN(n)?0:n};
 const fn=n=>n.toLocaleString('he-IL');
 const cur=(n,d=0)=>'₪ '+(isFinite(n)?n:0).toLocaleString('he-IL',{minimumFractionDigits:d,maximumFractionDigits:d});
-function rate(t,k){if(t==='רכב חדש')return k==='פריים'?['פריים (4.75%) + 1.1%',.0585]:['4.4%',.044];if(t==='0 ק״מ')return k==='פריים'?['פריים (4.75%) + 2.2%',.0695]:['5.3%',.053];return k==='פריים'?['פריים (4.75%) + 4%',.0875]:['6.9%',.069]}
+function rate(t,k){if(t==='0 ק״מ')return k==='פריים'?['פריים (4.75%) + 2.2%',.0695]:['5.3%',.053];return k==='פריים'?['פריים (4.75%) + 4%',.0875]:['6.9%',.069]}
 const maxM=y=>Math.max(...L[y].t.map(a=>a[0]));
 const maxP=(y,m)=>{let b=0;L[y].t.forEach(([tm,tp])=>{if(tm>=m)b=Math.max(b,tp)});return b};
 function pmt(loan,bal,m,r){const mr=r/12,p=loan-bal;if(!m)return 0;return(mr?mr*p/(1-Math.pow(1+mr,-m)):p/m)+bal*mr}
@@ -171,9 +172,14 @@ function calc(){
  $('lim').innerHTML='<b style="color:var(--gold)">⚠️ מגבלות:</b> '+lt;
  $('slider').max=mx;
  let m=Math.round(pn($('months').value));
- const price=pn($('price').value),loan=pn($('loan').value),bal=pn($('bal').value);
+ const price=pn($('price').value),loan=pn($('loan').value);let bal=pn($('bal').value);
  $('mv').textContent=m+' חודשים';$('slider').value=Math.min(m,mx);
  const pct=m>60?0:(used?maxP(y,m):.5);
+ const balEl=$('bal'),blocked=pct===0;
+ if(blocked){if(balEl.value)balEl.value='';bal=0}
+ else if(price>0&&bal>price*pct+.005){bal=Math.floor(price*pct+1e-6);balEl.value=fn(bal)}
+ balEl.disabled=blocked;balEl.placeholder=blocked?'חסום':'';
+ balEl.closest('.cur').querySelector('.ov').style.visibility=blocked?'hidden':'';
  $('balmax').textContent=pct?`בלון מקסימלי ל-${m} תשלומים: ${(pct*100).toFixed(0)}% (${cur(price*pct)})`:`בתקופה זו לא ניתן בלון`;
  $('ltv').textContent=price?`מימון: ${(loan/price*100).toFixed(1)}% ממחיר הבסיס`:'';
  const errs=[];
@@ -200,6 +206,7 @@ function calc(){
  for(let i=1;i<=m&&i<=120;i++){const it=bl*mr,pr=P-it;bl-=pr;h+=`<tr><td>${i}</td><td>${cur(P)}</td><td>${cur(pr)}</td><td>${cur(it)}</td><td>${cur(Math.max(bl,0))}</td></tr>`}
  if(bal>0&&m>0)h+=`<tr class="last"><td>בלון</td><td>${cur(bal)}</td><td>${cur(bal)}</td><td>₪ 0</td><td>₪ 0</td></tr>`;
  $('tb').innerHTML=bad?'<tr><td colspan="5">תקנו את הנתונים להצגת הטבלה</td></tr>':h;
+ mir();
 }
 ['price','loan','bal'].forEach(i=>$(i).addEventListener('input',e=>{const v=pn(e.target.value);e.target.value=e.target.value.trim()===''?'':fn(v);calc()}));
 $('months').addEventListener('input',calc);
